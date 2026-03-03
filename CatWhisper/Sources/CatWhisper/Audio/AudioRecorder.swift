@@ -2,6 +2,7 @@ import AVFoundation
 
 /// Records audio from the microphone using AVAudioEngine
 /// Outputs 16kHz mono Float32 samples suitable for ASR
+/// Automatically handles audio device switching mid-recording
 final class AudioRecorder {
     private let engine = AVAudioEngine()
     private let buffer = AudioBuffer()
@@ -23,16 +24,71 @@ final class AudioRecorder {
         }
     }
 
-    /// Start recording from the default input device
+    init() {
+        // When the audio device changes (e.g. switching to AirPods),
+        // AVAudioEngine stops itself and fires this notification.
+        // We reconfigure and restart to continue recording seamlessly.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleConfigurationChange),
+            name: .AVAudioEngineConfigurationChange,
+            object: engine
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    // MARK: - Device Change Handling
+
+    @objc private func handleConfigurationChange(_ notification: Notification) {
+        guard isRecording else { return }
+
+        // Engine already stopped itself. Clean up old tap and restart.
+        engine.inputNode.removeTap(onBus: 0)
+
+        do {
+            try configureAndStart()
+        } catch {
+            isRecording = false
+        }
+    }
+
+    // MARK: - Recording
+
     func startRecording() throws {
         guard !isRecording else { throw RecorderError.alreadyRecording }
-
         buffer.reset()
+        try configureAndStart()
+    }
 
+    func stopRecording() -> [Float] {
+        guard isRecording else { return [] }
+
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        isRecording = false
+
+        return buffer.consume()
+    }
+
+    // MARK: - Engine Configuration
+
+    /// Configure the engine for the current input device and start it.
+    /// Called on initial start and after device switches.
+    private func configureAndStart() throws {
         let inputNode = engine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
-        // Create target format: 16kHz mono Float32
+        // Guard against no input device (e.g. all devices disconnected)
+        guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
+            throw RecorderError.engineStartFailed(
+                NSError(domain: "AudioRecorder", code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "無法取得音訊輸入裝置"])
+            )
+        }
+
         guard let targetFormat = AVAudioFormat(
             commonFormat: .pcmFormatFloat32,
             sampleRate: Self.targetSampleRate,
@@ -45,14 +101,13 @@ final class AudioRecorder {
             )
         }
 
-        // Install tap with converter for resampling
+        // Create converter matching the *current* device's format
         let converter = AVAudioConverter(from: inputFormat, to: targetFormat)
 
         inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) {
             [weak self] pcmBuffer, _ in
             guard let self, let converter else { return }
 
-            // Calculate output frame count based on sample rate ratio
             let ratio = Self.targetSampleRate / inputFormat.sampleRate
             let outputFrameCount = AVAudioFrameCount(Double(pcmBuffer.frameLength) * ratio)
 
@@ -69,7 +124,6 @@ final class AudioRecorder {
 
             guard status != .error, error == nil else { return }
 
-            // Extract Float32 samples
             if let channelData = outputBuffer.floatChannelData {
                 let samples = Array(UnsafeBufferPointer(
                     start: channelData[0],
@@ -86,16 +140,5 @@ final class AudioRecorder {
             inputNode.removeTap(onBus: 0)
             throw RecorderError.engineStartFailed(error)
         }
-    }
-
-    /// Stop recording and return all accumulated samples
-    func stopRecording() -> [Float] {
-        guard isRecording else { return [] }
-
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
-        isRecording = false
-
-        return buffer.consume()
     }
 }

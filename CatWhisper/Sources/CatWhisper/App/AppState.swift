@@ -34,6 +34,7 @@ final class AppState: ObservableObject {
     private let fnKeyMonitor = FnKeyMonitor()
     private let notchOverlay = NotchOverlay()
     private var recordingStartTime: Date?
+    private var fnMonitorReady = false
 
     var isRecording: Bool { state == .recording }
     var isTranscribing: Bool { state == .transcribing }
@@ -42,9 +43,15 @@ final class AppState: ObservableObject {
     /// Minimum hold duration (seconds) to avoid accidental fn taps
     private static let minimumRecordingDuration: TimeInterval = 0.3
 
-    // MARK: - Setup
+    // MARK: - Bootstrap (called once at app launch)
 
-    func setupFnKeyMonitor() {
+    func bootstrap() {
+        setupFnKeyMonitor()
+        Task { await loadModelIfNeeded() }
+    }
+
+    private func setupFnKeyMonitor() {
+        guard !fnMonitorReady else { return }
         fnKeyMonitor.onFnDown = { [weak self] in
             self?.startRecording()
         }
@@ -52,6 +59,7 @@ final class AppState: ObservableObject {
             self?.stopRecordingAndTranscribe()
         }
         fnKeyMonitor.start()
+        fnMonitorReady = true
     }
 
     // MARK: - Model Loading
@@ -78,7 +86,10 @@ final class AppState: ObservableObject {
     // MARK: - Recording (hold-to-record)
 
     func startRecording() {
-        guard state == .idle else { return }
+        switch state {
+        case .idle, .error: break   // allow recording
+        default: return             // busy (loading/recording/transcribing)
+        }
 
         guard PermissionManager.shared.microphoneAuthorized else {
             Task {
@@ -119,6 +130,14 @@ final class AppState: ObservableObject {
         Task {
             do {
                 let text = try await transcriptionEngine.transcribe(samples: samples)
+
+                // Empty result = no speech detected → silently return to idle
+                guard !text.isEmpty else {
+                    state = .idle
+                    notchOverlay.hide()
+                    return
+                }
+
                 lastTranscription = text
 
                 let entry = TranscriptionEntry(text: text, timestamp: Date())
@@ -134,7 +153,6 @@ final class AppState: ObservableObject {
                 if AccessibilityChecker.isTrusted {
                     textInjector.injectText(text)
                 } else {
-                    // Fallback: copy to clipboard so user can paste manually
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
                     AccessibilityChecker.checkAndPrompt()
@@ -142,8 +160,14 @@ final class AppState: ObservableObject {
 
                 state = .idle
             } catch {
+                // Real errors (model not loaded, etc.) — show briefly then auto-clear
                 state = .error("辨識失敗：\(error.localizedDescription)")
                 notchOverlay.hide()
+                // Auto-clear error after 3 seconds so user can retry
+                Task {
+                    try? await Task.sleep(for: .seconds(3))
+                    if case .error = state { state = .idle }
+                }
             }
         }
     }

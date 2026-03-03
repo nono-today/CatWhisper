@@ -53,7 +53,7 @@ actor TranscriptionEngine {
 
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
-            throw EngineError.transcriptionFailed("未偵測到語音內容")
+            return ""  // No speech detected — let caller handle silently
         }
 
         return toTraditionalChinese(trimmed)

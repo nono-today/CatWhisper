@@ -58,14 +58,19 @@ struct SettingsView: View {
                 HStack {
                     Text("輔助使用")
                     Spacer()
-                    if AccessibilityChecker.isTrusted {
+                    if PermissionManager.shared.accessibilityAuthorized {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     } else {
-                        Button("授權") {
-                            AccessibilityChecker.checkAndPrompt()
+                        Button("開啟系統設定") {
+                            PermissionManager.shared.requestAccessibilityAccess()
                         }
                     }
+                }
+                if !PermissionManager.shared.accessibilityAuthorized {
+                    Text("若已授權仍無法使用：請先移除舊的 CatWhisper，再重新加入")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

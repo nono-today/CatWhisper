@@ -8,11 +8,11 @@ struct CatWhisperApp: App {
         MenuBarExtra {
             MenuBarView()
                 .environmentObject(appState)
-                .onAppear {
-                    appState.setupFnKeyMonitor()
-                }
         } label: {
             StatusItemIcon(state: appState.state)
+                .onAppear {
+                    appState.bootstrap()
+                }
         }
         .menuBarExtraStyle(.window)
 
@@ -31,7 +31,6 @@ struct CatWhisperApp: App {
     }
 
     init() {
-        // Hide dock icon — menu bar only app
         NSApplication.shared.setActivationPolicy(.accessory)
     }
 }

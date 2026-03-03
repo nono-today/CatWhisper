@@ -33,9 +33,6 @@ struct MenuBarView: View {
         }
         .padding(12)
         .frame(width: 320)
-        .task {
-            await appState.loadModelIfNeeded()
-        }
     }
 
     // MARK: - Sections
@@ -118,9 +115,9 @@ struct MenuBarView: View {
 
     private var footerSection: some View {
         HStack {
-            if !AccessibilityChecker.isTrusted {
+            if !PermissionManager.shared.accessibilityAuthorized {
                 Button("授權輔助使用") {
-                    AccessibilityChecker.checkAndPrompt()
+                    PermissionManager.shared.requestAccessibilityAccess()
                 }
                 .font(.caption)
             }

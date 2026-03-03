@@ -1,6 +1,8 @@
 import AVFoundation
+import Combine
 
 /// Manages app permissions (microphone, accessibility)
+/// Polls accessibility status every 2 seconds since macOS has no callback for it
 @MainActor
 final class PermissionManager: ObservableObject {
     static let shared = PermissionManager()
@@ -8,8 +10,11 @@ final class PermissionManager: ObservableObject {
     @Published var microphoneAuthorized = false
     @Published var accessibilityAuthorized = false
 
+    private var pollTimer: Timer?
+
     private init() {
         checkPermissions()
+        startPolling()
     }
 
     func checkPermissions() {
@@ -24,10 +29,16 @@ final class PermissionManager: ObservableObject {
     }
 
     func requestAccessibilityAccess() {
-        AccessibilityChecker.checkAndPrompt()
-        // Re-check after a delay (user needs to toggle in System Settings)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.checkPermissions()
+        AccessibilityChecker.openAccessibilitySettings()
+    }
+
+    /// Poll accessibility status — macOS provides no notification for this change,
+    /// so we check periodically to detect when the user grants permission.
+    private func startPolling() {
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.accessibilityAuthorized = AccessibilityChecker.isTrusted
+            }
         }
     }
 }
