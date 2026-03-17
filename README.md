@@ -52,25 +52,6 @@ Menu bar 上的 Nyan Cat 圖標會隨著 App 狀態改變表情 — 待命時正
 </tr>
 </table>
 
-## 截圖
-
-> 以下截圖展示 CatWhisper 的主要介面。歡迎替換為你自己的截圖。
-
-<div align="center">
-<table>
-<tr>
-<td align="center"><img src="docs/images/screenshot-menubar.svg" alt="Menu Bar"><br><b>選單列彈出視窗</b></td>
-<td align="center"><img src="docs/images/screenshot-onboarding.svg" alt="Onboarding"><br><b>首次設定引導</b></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/images/screenshot-notch.svg" alt="Notch Overlay"><br><b>Notch 動態島</b></td>
-<td align="center"><img src="docs/images/screenshot-settings.svg" alt="Settings"><br><b>設定視窗</b></td>
-</tr>
-</table>
-</div>
-
-> **提示：** 將實際截圖放到 `docs/images/` 資料夾，命名為 `screenshot-menubar.png`、`screenshot-onboarding.png` 等，然後更新上方的圖片路徑。
-
 ## 系統需求
 
 | 項目 | 需求 |
