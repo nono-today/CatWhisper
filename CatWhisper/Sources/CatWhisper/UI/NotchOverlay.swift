@@ -24,6 +24,7 @@ final class NotchOverlay {
     private var panel: NSPanel?
     let viewModel = NotchPillViewModel()
     private var hideWorkItem: DispatchWorkItem?
+    private var orderOutWorkItem: DispatchWorkItem?
 
     func setup() {
         guard panel == nil else { return }
@@ -74,37 +75,48 @@ final class NotchOverlay {
 
     func showRecording() {
         setup()
-        hideWorkItem?.cancel()
+        cancelPendingHide()
         viewModel.displayState = .recording
         panel?.orderFrontRegardless()
     }
 
     func showTranscribing() {
-        hideWorkItem?.cancel()
+        cancelPendingHide()
         viewModel.displayState = .transcribing
     }
 
     func showResult(_ text: String) {
-        hideWorkItem?.cancel()
+        cancelPendingHide()
         viewModel.resultText = text
         viewModel.displayState = .result
 
         let item = DispatchWorkItem { [weak self] in
             self?.viewModel.displayState = .hidden
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            let orderOut = DispatchWorkItem { [weak self] in
                 self?.panel?.orderOut(nil)
             }
+            self?.orderOutWorkItem = orderOut
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: orderOut)
         }
         hideWorkItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: item)
     }
 
     func hide() {
-        hideWorkItem?.cancel()
+        cancelPendingHide()
         viewModel.displayState = .hidden
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        let orderOut = DispatchWorkItem { [weak self] in
             self?.panel?.orderOut(nil)
         }
+        orderOutWorkItem = orderOut
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: orderOut)
+    }
+
+    private func cancelPendingHide() {
+        hideWorkItem?.cancel()
+        hideWorkItem = nil
+        orderOutWorkItem?.cancel()
+        orderOutWorkItem = nil
     }
 }
 

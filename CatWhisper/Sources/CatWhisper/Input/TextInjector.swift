@@ -9,8 +9,8 @@ final class TextInjector {
     func injectText(_ text: String) {
         let pasteboard = NSPasteboard.general
 
-        // Save original clipboard
-        let originalItems: [(NSPasteboard.PasteboardType, Data)] = pasteboard.pasteboardItems?.flatMap { item in
+        // Save original clipboard — preserve each NSPasteboardItem separately
+        let savedItems: [[(NSPasteboard.PasteboardType, Data)]] = pasteboard.pasteboardItems?.map { item in
             item.types.compactMap { type in
                 guard let data = item.data(forType: type) else { return nil }
                 return (type, data)
@@ -21,15 +21,22 @@ final class TextInjector {
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
 
-        // Dispatch paste simulation with a small delay to ensure clipboard is ready
-        DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.08) {
+        // Simulate paste with a small delay to ensure clipboard is ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
             Self.simulatePaste()
 
             // Restore original clipboard after paste completes
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 pasteboard.clearContents()
-                for (type, data) in originalItems {
-                    pasteboard.setData(data, forType: type)
+                let items: [NSPasteboardItem] = savedItems.map { typesAndData in
+                    let item = NSPasteboardItem()
+                    for (type, data) in typesAndData {
+                        item.setData(data, forType: type)
+                    }
+                    return item
+                }
+                if !items.isEmpty {
+                    pasteboard.writeObjects(items)
                 }
             }
         }
@@ -47,7 +54,10 @@ final class TextInjector {
         keyUp.flags = .maskCommand
 
         keyDown.post(tap: .cghidEventTap)
-        usleep(30_000) // 30ms gap between key down and up
-        keyUp.post(tap: .cghidEventTap)
+
+        // Use async delay instead of blocking usleep
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            keyUp.post(tap: .cghidEventTap)
+        }
     }
 }

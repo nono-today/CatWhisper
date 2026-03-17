@@ -66,7 +66,19 @@ final class AppState: ObservableObject {
 
     func loadModelIfNeeded() async {
         guard !modelLoaded else { return }
+        await loadModel()
+    }
+
+    /// Force reload the model (e.g. after changing model in settings)
+    func reloadModel() async {
+        modelLoaded = false
+        await loadModel()
+    }
+
+    private func loadModel() async {
         state = .loading
+        modelLoadProgress = 0
+        modelLoadFileName = ""
         do {
             try await transcriptionEngine.loadModel(
                 modelId: selectedModelId
@@ -89,6 +101,12 @@ final class AppState: ObservableObject {
         switch state {
         case .idle, .error: break   // allow recording
         default: return             // busy (loading/recording/transcribing)
+        }
+
+        guard modelLoaded else {
+            state = .error("模型尚未載入，請稍候")
+            Task { await loadModelIfNeeded() }
+            return
         }
 
         guard PermissionManager.shared.microphoneAuthorized else {

@@ -87,10 +87,16 @@ struct SettingsView: View {
                     Text("Qwen3-ASR 1.7B (8-bit, ~2.5GB)")
                         .tag("mlx-community/Qwen3-ASR-1.7B-8bit")
                 }
+                .onChange(of: selectedModelId) { _, _ in
+                    Task { await appState.reloadModel() }
+                }
 
-                Text("更換模型後需重新啟動應用程式")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if appState.isLoading {
+                    ProgressView(value: appState.modelLoadProgress) {
+                        Text("下載中：\(appState.modelLoadFileName)")
+                            .font(.caption)
+                    }
+                }
             }
 
             Section("輸出") {

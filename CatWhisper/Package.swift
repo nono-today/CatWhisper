@@ -12,7 +12,6 @@ let package = Package(
             name: "CatWhisper",
             dependencies: [
                 .product(name: "Qwen3ASR", package: "qwen3-asr-swift"),
-                .product(name: "Qwen3Common", package: "qwen3-asr-swift"),
             ]
         ),
     ]

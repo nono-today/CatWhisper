@@ -26,6 +26,8 @@ actor TranscriptionEngine {
         modelId: String = "mlx-community/Qwen3-ASR-0.6B-4bit",
         progressHandler: ((Double, String) -> Void)? = nil
     ) async throws {
+        // Unload previous model to free memory before loading new one
+        model = nil
         model = try await Qwen3ASRModel.fromPretrained(
             modelId: modelId,
             progressHandler: progressHandler

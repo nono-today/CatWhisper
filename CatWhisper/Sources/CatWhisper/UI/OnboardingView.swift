@@ -1,123 +1,221 @@
 import SwiftUI
 
-/// First-launch permission guide
+/// First-launch permission guide — dark, rounded style matching notch pill
 struct OnboardingView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
     @State private var currentStep = 0
+    @State private var appeared = false
+
+    private let steps: [(icon: String, title: String, desc: String)] = [
+        ("mic.fill", "麥克風", "需要麥克風來錄製語音"),
+        ("hand.raised.fill", "輔助使用", "讓辨識結果自動輸入到其他 App"),
+        ("checkmark", "準備就緒", "按住 fn 說話，放開自動輸入"),
+    ]
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            Text("歡迎使用 CatWhisper")
-                .font(.largeTitle.bold())
+        ZStack {
+            // Background
+            Color.black.ignoresSafeArea()
 
-            Text("按下快捷鍵，說話，文字自動輸入")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                Spacer()
 
-            Spacer()
+                // App identity
+                header
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 12)
 
-            // Steps
-            Group {
-                switch currentStep {
-                case 0:
-                    stepView(
-                        icon: "mic.circle.fill",
-                        title: "麥克風權限",
-                        description: "CatWhisper 需要麥克風來錄製您的語音",
-                        actionTitle: "授權麥克風",
-                        action: {
-                            Task {
-                                _ = await PermissionManager.shared.requestMicrophoneAccess()
-                                currentStep = 1
-                            }
-                        },
-                        granted: PermissionManager.shared.microphoneAuthorized
-                    )
-                case 1:
-                    stepView(
-                        icon: "hand.raised.circle.fill",
-                        title: "輔助使用權限",
-                        description: "需要此權限才能自動將辨識結果輸入到其他應用程式。\n若不授權，可改為手動複製貼上。",
-                        actionTitle: "開啟系統設定",
-                        action: {
-                            AccessibilityChecker.checkAndPrompt()
-                            currentStep = 2
-                        },
-                        granted: AccessibilityChecker.isTrusted
-                    )
-                default:
-                    stepView(
-                        icon: "checkmark.circle.fill",
-                        title: "準備就緒！",
-                        description: "按下 ⌥ Space 開始錄音\n再按一次停止錄音，文字會自動輸入",
-                        actionTitle: "開始使用",
-                        action: { dismiss() },
-                        granted: false
-                    )
+                Spacer().frame(height: 40)
+
+                // Step card
+                stepCard
+                    .id(currentStep)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+
+                Spacer().frame(height: 32)
+
+                // Dots
+                stepDots
+
+                Spacer().frame(height: 20)
+
+                // Skip
+                if currentStep < 2 {
+                    Button("跳過設定") { dismiss() }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.3))
+                } else {
+                    Color.clear.frame(height: 16)
                 }
+
+                Spacer()
             }
-
-            Spacer()
-
-            // Step indicator
-            HStack(spacing: 8) {
-                ForEach(0..<3) { step in
-                    Circle()
-                        .fill(step == currentStep ? Color.accentColor : Color.secondary.opacity(0.3))
-                        .frame(width: 8, height: 8)
-                }
-            }
-
-            // Skip button
-            if currentStep < 2 {
-                Button("跳過") {
-                    dismiss()
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .font(.caption)
+            .padding(.horizontal, 40)
+        }
+        .frame(width: 460, height: 420)
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: currentStep)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
+                appeared = true
             }
         }
-        .padding(32)
     }
 
-    private func stepView(
-        icon: String,
-        title: String,
-        description: String,
-        actionTitle: String,
-        action: @escaping () -> Void,
-        granted: Bool
-    ) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 64))
-                .foregroundStyle(granted ? .green : .accentColor)
+    // MARK: - Header
 
-            Text(title)
-                .font(.title2.bold())
-
-            Text(description)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            if granted {
-                Label("已授權", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            currentStep += 1
-                        }
-                    }
-            } else {
-                Button(actionTitle, action: action)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+    private var header: some View {
+        VStack(spacing: 10) {
+            // Cat ear icon
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.06))
+                    .frame(width: 72, height: 72)
+                Text("🐱")
+                    .font(.system(size: 36))
             }
+
+            Text("CatWhisper")
+                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+
+            Text("按下快捷鍵，說話，文字自動輸入")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.45))
+        }
+    }
+
+    // MARK: - Step Card
+
+    private var stepCard: some View {
+        VStack(spacing: 20) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(stepIconColor.opacity(0.15))
+                    .frame(width: 52, height: 52)
+                Image(systemName: steps[currentStep].icon)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(stepIconColor)
+            }
+
+            VStack(spacing: 6) {
+                Text(steps[currentStep].title)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(steps[currentStep].desc)
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Action
+            stepAction
+        }
+        .padding(.horizontal, 28)
+        .padding(.vertical, 24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.white.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+                )
+        )
+    }
+
+    @ViewBuilder
+    private var stepAction: some View {
+        switch currentStep {
+        case 0:
+            if PermissionManager.shared.microphoneAuthorized {
+                grantedBadge
+                    .onAppear { advanceAfterDelay() }
+            } else {
+                actionButton("授權麥克風") {
+                    Task {
+                        _ = await PermissionManager.shared.requestMicrophoneAccess()
+                        currentStep = 1
+                    }
+                }
+            }
+        case 1:
+            if AccessibilityChecker.isTrusted {
+                grantedBadge
+                    .onAppear { advanceAfterDelay() }
+            } else {
+                VStack(spacing: 10) {
+                    actionButton("開啟系統設定") {
+                        AccessibilityChecker.checkAndPrompt()
+                        currentStep = 2
+                    }
+                    Text("若不授權，可改為手動複製貼上")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.3))
+                }
+            }
+        default:
+            actionButton("開始使用") { dismiss() }
+        }
+    }
+
+    // MARK: - Components
+
+    private func actionButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 10)
+                .background(
+                    Capsule().fill(.white)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var grantedBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 14))
+            Text("已授權")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+        }
+        .foregroundStyle(.green)
+        .padding(.vertical, 4)
+    }
+
+    private var stepDots: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<3) { i in
+                Capsule()
+                    .fill(i == currentStep ? .white : .white.opacity(0.2))
+                    .frame(width: i == currentStep ? 20 : 6, height: 6)
+                    .animation(.spring(response: 0.35), value: currentStep)
+            }
+        }
+    }
+
+    private var stepIconColor: Color {
+        switch currentStep {
+        case 0: return .red
+        case 1: return .orange
+        default: return .green
+        }
+    }
+
+    private func advanceAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            if currentStep < 2 { currentStep += 1 }
         }
     }
 }

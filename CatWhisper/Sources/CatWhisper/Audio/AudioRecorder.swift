@@ -6,7 +6,13 @@ import AVFoundation
 final class AudioRecorder {
     private let engine = AVAudioEngine()
     private let buffer = AudioBuffer()
-    private var isRecording = false
+    private var _isRecording = false
+    private let stateLock = NSLock()
+
+    private var isRecording: Bool {
+        get { stateLock.lock(); defer { stateLock.unlock() }; return _isRecording }
+        set { stateLock.lock(); defer { stateLock.unlock() }; _isRecording = newValue }
+    }
 
     private static let targetSampleRate: Double = 16_000
 
