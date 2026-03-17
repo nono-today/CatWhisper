@@ -1,7 +1,27 @@
+# macOS
 .DS_Store
-.build/
-.swiftpm/
+._*
+
+# Xcode
 *.xcodeproj
 xcuserdata/
 DerivedData/
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# Build artifacts
+*.app
+*.dmg
+*.zip
+dist/
+
+# Claude
 .claude/
+
+# Misc
+*.log
+*.tmp
