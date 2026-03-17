@@ -67,6 +67,8 @@ Menu bar 上的 Nyan Cat 圖標會隨著 App 狀態改變表情 — 待命時正
 
 前往 **[Releases](https://github.com/koobraelc/CatWhisper/releases)** 下載最新的 `.dmg`，拖曳到應用程式資料夾即可。
 
+> **注意：** 首次開啟時，若出現「無法驗證開發者」提示，請右鍵點擊 CatWhisper → 打開。
+
 ### 從原始碼建置
 
 ```bash
