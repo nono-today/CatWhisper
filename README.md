@@ -4,22 +4,224 @@
 
 # CatWhisper
 
-**macOS 選單列語音轉文字工具**
+**Offline speech-to-text for macOS, right from your menu bar.**
 
-按住 fn 說話，放開自動辨識，文字直接輸入到游標位置。
+Hold fn to speak, release to transcribe — text lands at your cursor instantly.
 
-全程離線，資料不離開你的電腦。
+Fully offline. Your voice never leaves your Mac.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-macOS%2014+-black.svg)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
-[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-Required-green.svg)](#系統需求)
+[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-Required-green.svg)](#requirements)
+
+[English](#features) | [繁體中文](#功能特色)
 
 </div>
 
 ---
 
-## 特色
+## Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Hold fn, just talk
+No window switching, no app to open. Hold the fn key in any application, speak, and the transcription is typed at your cursor when you release.
+
+</td>
+<td width="50%" valign="top">
+
+### Completely offline
+Runs [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) and [OpenAI Whisper](https://github.com/openai/whisper) models locally via Apple MLX. Your audio data never leaves your machine.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### Notch overlay
+Recording and transcription status appears as a capsule near the notch with smooth spring animations. Stays out of your way.
+
+</td>
+<td width="50%" valign="top">
+
+### Nyan Cat menu bar
+The Nyan Cat icon changes expression based on app state — normal eyes (idle), headphones (recording), squinting (transcribing), X eyes (error).
+
+</td>
+</tr>
+</table>
+
+## Requirements
+
+| | Requirement |
+|------|------|
+| OS | macOS 14.0 (Sonoma) or later |
+| Chip | Apple Silicon (M1 / M2 / M3 / M4) |
+| Disk | ~400MB (default model, downloaded on first launch) |
+| Permissions | Microphone, Accessibility (optional) |
+
+## Install
+
+### Download
+
+Grab the latest `.zip` from **[Releases](https://github.com/koobraelc/CatWhisper/releases)**, unzip, and drag to Applications.
+
+> **Note:** On first launch, right-click CatWhisper → Open to bypass Gatekeeper.
+
+### Build from source
+
+```bash
+git clone https://github.com/koobraelc/CatWhisper.git
+cd CatWhisper/CatWhisper
+
+# Option A: Swift CLI
+swift build -c release
+
+# Option B: Xcode (requires xcodegen)
+brew install xcodegen
+xcodegen generate
+open CatWhisper.xcodeproj
+```
+
+## Usage
+
+```
+1. Launch CatWhisper → appears in the menu bar (Nyan Cat icon)
+2. First launch → onboarding grants Microphone & Accessibility permissions
+3. Wait for model download → ~1-2 min on first run
+4. Hold fn in any app → start speaking
+5. Release fn → transcription is typed at your cursor
+```
+
+### Permissions
+
+| Permission | Purpose | Required? |
+|------|------|--------|
+| Microphone | Record audio for transcription | Yes |
+| Accessibility | Type text into other apps automatically | Optional (falls back to clipboard) |
+
+## Models
+
+Choose your model in Settings. Models are downloaded from Hugging Face on first use, then run fully offline.
+
+| Model | Size | Languages | Notes |
+|-------|------|-----------|-------|
+| Qwen3-ASR 0.6B 4-bit | ~400MB | 30 | Default, fastest |
+| Qwen3-ASR 0.6B 8-bit | ~1GB | 30 | Better accuracy |
+| Qwen3-ASR 1.7B 4-bit | ~1.6GB | 52 | Balanced |
+| Qwen3-ASR 1.7B 8-bit | ~2.5GB | 52 | Best accuracy |
+| **Whisper large-v3-turbo** | ~1.6GB | 99 | OpenAI Whisper, widest language coverage |
+
+## Architecture
+
+```
+CatWhisper/
+├── App/
+│   ├── CatWhisperApp.swift        # Entry point, MenuBarExtra
+│   └── AppState.swift             # State machine (idle → recording → transcribing)
+├── Audio/
+│   ├── AudioRecorder.swift        # AVAudioEngine recording
+│   └── AudioBuffer.swift          # Thread-safe sample buffer
+├── Transcription/
+│   └── TranscriptionEngine.swift  # Dual-engine: Qwen3-ASR + Whisper
+├── Whisper/
+│   ├── WhisperConfig.swift        # Model config from JSON
+│   ├── WhisperEncoder.swift       # Conv1d + transformer audio encoder
+│   ├── WhisperDecoder.swift       # Cross-attention text decoder
+│   └── WhisperModel.swift         # Weight loading + greedy decoding
+├── Input/
+│   ├── TextInjector.swift         # Accessibility API text injection
+│   └── AccessibilityChecker.swift
+├── Hotkey/
+│   └── FnKeyMonitor.swift         # Global fn key monitoring
+├── Permissions/
+│   └── PermissionManager.swift
+└── UI/
+    ├── MenuBarView.swift          # Menu bar popover
+    ├── NotchOverlay.swift         # Dynamic Island capsule (NSPanel)
+    ├── OnboardingView.swift       # First-launch wizard
+    ├── SettingsView.swift         # Settings window
+    └── StatusItemIcon.swift       # Nyan Cat pixel art
+```
+
+**Built with:**
+- **[MLX Swift](https://github.com/ml-explore/mlx-swift)** — ML framework for Apple Silicon
+- **[Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift)** — On-device speech recognition
+- **OpenAI Whisper** — Implemented directly in MLX Swift, no extra dependencies
+- **AVAudioEngine** — Real-time audio capture
+- **Accessibility API** — Cross-app text injection
+
+## FAQ
+
+<details>
+<summary><b>fn key doesn't do anything?</b></summary>
+
+1. Check the Nyan Cat icon is in the menu bar and shows "Idle"
+2. Make sure the model has finished downloading (not showing "Loading model XX%")
+3. System Settings → Keyboard → check fn key behavior
+
+</details>
+
+<details>
+<summary><b>Text isn't typed automatically?</b></summary>
+
+Grant Accessibility permission: System Settings → Privacy & Security → Accessibility → add CatWhisper.
+
+If already granted but not working, remove CatWhisper from the list and re-add it.
+
+</details>
+
+<details>
+<summary><b>Want better accuracy?</b></summary>
+
+Switch to the 1.7B model or Whisper large-v3-turbo in Settings. Larger models are slower but more accurate.
+
+</details>
+
+<details>
+<summary><b>What languages are supported?</b></summary>
+
+Qwen3-ASR 0.6B supports 30 languages, the 1.7B variant supports 52, and Whisper large-v3-turbo supports 99. Output is converted to Traditional Chinese by default.
+
+</details>
+
+## Roadmap
+
+- [ ] Custom hotkey (beyond fn)
+- [ ] Language selection for transcription
+- [ ] Real-time streaming transcription
+- [ ] Homebrew Cask distribution
+- [ ] Post-processing (punctuation, formatting)
+
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Bug reports, feature requests, and PRs are all appreciated.
+
+## Credits
+
+- [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) — Speech recognition models
+- [MLX Swift](https://github.com/ml-explore/mlx-swift) — Apple ML framework
+- [OpenAI Whisper](https://github.com/openai/whisper) — Speech recognition model architecture
+- [Nyan Cat](https://www.nyan.cat/) — Inspired our menu bar icon
+
+## License
+
+[MIT License](LICENSE) — free to use, modify, and distribute.
+
+---
+
+<div align="center">
+
+# 繁體中文
+
+</div>
+
+## 功能特色
 
 <table>
 <tr>
@@ -32,7 +234,7 @@
 <td width="50%" valign="top">
 
 ### 完全離線辨識
-使用 [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) 模型，透過 Apple MLX 框架在本機推論。你的語音資料永遠不會離開你的電腦。
+使用 [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) 與 [OpenAI Whisper](https://github.com/openai/whisper) 模型，透過 Apple MLX 框架在本機推論。你的語音資料永遠不會離開你的電腦。
 
 </td>
 </tr>
@@ -63,35 +265,25 @@ Menu bar 上的 Nyan Cat 圖標會隨著 App 狀態改變表情 — 待命時正
 
 ## 安裝
 
-### 下載 Release
+### 下載安裝
 
-前往 **[Releases](https://github.com/koobraelc/CatWhisper/releases)** 下載最新的 `.dmg`，拖曳到應用程式資料夾即可。
+前往 **[Releases](https://github.com/koobraelc/CatWhisper/releases)** 下載最新的 `.zip`，解壓後拖曳到應用程式資料夾。
 
 > **注意：** 首次開啟時，若出現「無法驗證開發者」提示，請右鍵點擊 CatWhisper → 打開。
 
 ### 從原始碼建置
 
 ```bash
-# 1. Clone
 git clone https://github.com/koobraelc/CatWhisper.git
 cd CatWhisper/CatWhisper
 
-# 2. 產生 Xcode 專案（需要 xcodegen）
+# 方法一：Swift CLI
+swift build -c release
+
+# 方法二：Xcode（需要 xcodegen）
 brew install xcodegen
 xcodegen generate
-
-# 3. 用 Xcode 開啟
 open CatWhisper.xcodeproj
-```
-
-或使用命令列建置：
-
-```bash
-xcodebuild build \
-  -scheme CatWhisper \
-  -configuration Release \
-  -destination 'platform=OS X' \
-  -skipPackagePluginValidation
 ```
 
 ## 使用方式
@@ -113,48 +305,15 @@ xcodebuild build \
 
 ## 模型
 
-CatWhisper 使用 [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) 語音辨識模型，在設定中可以切換：
+在設定中切換模型。模型首次選擇時自動從 Hugging Face 下載，之後完全離線運行。
 
-| 模型 | 大小 | 速度 | 精度 | 適用場景 |
-|------|------|------|------|----------|
-| Qwen3-ASR 0.6B (4-bit) | ~400MB | 快 | 良好 | 日常使用（預設） |
-| Qwen3-ASR 1.7B (8-bit) | ~2.5GB | 中等 | 更高 | 需要更高精度時 |
-
-模型會在首次選擇時自動從 Hugging Face 下載，之後完全離線運行。
-
-## 技術架構
-
-```
-CatWhisper/
-├── App/
-│   ├── CatWhisperApp.swift     # App 入口，MenuBarExtra
-│   └── AppState.swift          # 狀態機 (idle → recording → transcribing)
-├── Audio/
-│   ├── AudioRecorder.swift     # AVAudioEngine 錄音
-│   └── AudioBuffer.swift       # 音訊緩衝處理
-├── Transcription/
-│   └── TranscriptionEngine.swift  # Qwen3-ASR MLX 推論
-├── Input/
-│   ├── TextInjector.swift      # Accessibility API 文字注入
-│   └── AccessibilityChecker.swift
-├── Hotkey/
-│   └── FnKeyMonitor.swift      # fn 鍵全域監聽
-├── Permissions/
-│   └── PermissionManager.swift
-└── UI/
-    ├── MenuBarView.swift       # 選單列彈出視窗
-    ├── NotchOverlay.swift      # Notch 動態島 (NSPanel)
-    ├── OnboardingView.swift    # 首次設定引導
-    ├── SettingsView.swift      # 設定視窗
-    └── StatusItemIcon.swift    # Nyan Cat 像素圖標
-```
-
-**核心技術：**
-- **[MLX Swift](https://github.com/ml-explore/mlx-swift)** — Apple Silicon 上的機器學習框架
-- **[Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift)** — 語音辨識模型
-- **AVAudioEngine** — 即時音訊錄製
-- **Accessibility API** — 跨 App 文字注入
-- **NSPanel** — 無邊框浮動 overlay（Notch 動態島）
+| 模型 | 大小 | 語言數 | 說明 |
+|------|------|--------|------|
+| Qwen3-ASR 0.6B 4-bit | ~400MB | 30 | 預設，最快 |
+| Qwen3-ASR 0.6B 8-bit | ~1GB | 30 | 較準確 |
+| Qwen3-ASR 1.7B 4-bit | ~1.6GB | 52 | 平衡 |
+| Qwen3-ASR 1.7B 8-bit | ~2.5GB | 52 | 最準確 |
+| **Whisper large-v3-turbo** | ~1.6GB | 99 | OpenAI Whisper，語言覆蓋最廣 |
 
 ## 常見問題
 
@@ -179,36 +338,22 @@ CatWhisper/
 <details>
 <summary><b>辨識精度不夠好？</b></summary>
 
-可以在設定中切換到較大的 1.7B 模型，精度會更高但速度稍慢。
+可以在設定中切換到 1.7B 模型或 Whisper large-v3-turbo，精度會更高但速度稍慢。
 
 </details>
 
 <details>
 <summary><b>支援哪些語言？</b></summary>
 
-目前主要支援中文（繁體中文輸出）。Qwen3-ASR 模型本身也支援英文等其他語言。
+Qwen3-ASR 0.6B 支援 30 種語言、1.7B 支援 52 種、Whisper large-v3-turbo 支援 99 種。輸出預設轉換為繁體中文。
 
 </details>
-
-## Roadmap
-
-- [ ] 自訂快捷鍵（不只 fn）
-- [ ] 多語言辨識切換
-- [ ] 即時串流辨識（邊說邊顯示）
-- [ ] Homebrew Cask 安裝
-- [ ] 辨識結果後處理（標點符號優化）
 
 ## 貢獻
 
 歡迎貢獻！請參閱 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 無論是 bug 回報、功能建議、或直接提交 PR，都非常感謝。
-
-## 致謝
-
-- [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) — 語音辨識模型
-- [MLX Swift](https://github.com/ml-explore/mlx-swift) — Apple 機器學習框架
-- [Nyan Cat](https://www.nyan.cat/) — 經典迷因，啟發了我們的圖標設計
 
 ## 授權條款
 

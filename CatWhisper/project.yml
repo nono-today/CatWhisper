@@ -10,6 +10,9 @@ packages:
   qwen3-asr-swift:
     url: https://github.com/ivan-digital/qwen3-asr-swift
     branch: main
+  mlx-swift:
+    url: https://github.com/ml-explore/mlx-swift
+    from: "0.30.0"
 
 targets:
   CatWhisper:
@@ -41,6 +44,14 @@ targets:
     dependencies:
       - package: qwen3-asr-swift
         product: Qwen3ASR
+      - package: qwen3-asr-swift
+        product: Qwen3Common
+      - package: mlx-swift
+        product: MLX
+      - package: mlx-swift
+        product: MLXNN
+      - package: mlx-swift
+        product: MLXFast
     info:
       path: Resources/Info.plist
       properties:
