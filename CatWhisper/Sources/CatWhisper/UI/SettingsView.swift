@@ -25,7 +25,7 @@ struct SettingsView: View {
                     Label("關於", systemImage: "info.circle")
                 }
         }
-        .frame(width: 450, height: 300)
+        .frame(width: 450, height: 350)
     }
 
     // MARK: - Tabs
@@ -82,10 +82,22 @@ struct SettingsView: View {
         Form {
             Section("ASR 模型") {
                 Picker("模型", selection: $selectedModelId) {
-                    Text("Qwen3-ASR 0.6B (4-bit, ~400MB)")
-                        .tag("mlx-community/Qwen3-ASR-0.6B-4bit")
-                    Text("Qwen3-ASR 1.7B (8-bit, ~2.5GB)")
-                        .tag("mlx-community/Qwen3-ASR-1.7B-8bit")
+                    Section("Qwen3-ASR — 0.6B（30 語言）") {
+                        Text("0.6B 4-bit（~400MB，最快）")
+                            .tag("mlx-community/Qwen3-ASR-0.6B-4bit")
+                        Text("0.6B 8-bit（~1GB，較準確）")
+                            .tag("mlx-community/Qwen3-ASR-0.6B-8bit")
+                    }
+                    Section("Qwen3-ASR — 1.7B（52 語言）") {
+                        Text("1.7B 4-bit（~1.6GB，平衡）")
+                            .tag("mlx-community/Qwen3-ASR-1.7B-4bit")
+                        Text("1.7B 8-bit（~2.5GB，最準確）")
+                            .tag("mlx-community/Qwen3-ASR-1.7B-8bit")
+                    }
+                    Section("Whisper — large-v3-turbo（99 語言）") {
+                        Text("large-v3-turbo（~1.6GB）")
+                            .tag("mlx-community/whisper-large-v3-turbo")
+                    }
                 }
                 .onChange(of: selectedModelId) { _, _ in
                     Task { await appState.reloadModel() }

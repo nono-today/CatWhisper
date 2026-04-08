@@ -1,11 +1,23 @@
 import Foundation
 import Qwen3ASR
+import Qwen3Common
 
 /// Actor wrapping Qwen3ASRModel for thread-safe model loading and transcription
 /// Always outputs Traditional Chinese (簡體→繁體 conversion applied)
 actor TranscriptionEngine {
 
-    private var model: Qwen3ASRModel?
+    private var qwenModel: Qwen3ASRModel?
+    private var whisperModel: WhisperModel?
+
+    enum ModelFamily {
+        case qwen3
+        case whisper
+
+        static func detect(from modelId: String) -> ModelFamily {
+            if modelId.lowercased().contains("whisper") { return .whisper }
+            return .qwen3
+        }
+    }
 
     enum EngineError: LocalizedError {
         case modelNotLoaded
@@ -26,17 +38,27 @@ actor TranscriptionEngine {
         modelId: String = "mlx-community/Qwen3-ASR-0.6B-4bit",
         progressHandler: ((Double, String) -> Void)? = nil
     ) async throws {
-        // Unload previous model to free memory before loading new one
-        model = nil
-        model = try await Qwen3ASRModel.fromPretrained(
-            modelId: modelId,
-            progressHandler: progressHandler
-        )
+        // Unload previous models to free memory before loading new one
+        qwenModel = nil
+        whisperModel = nil
+
+        switch ModelFamily.detect(from: modelId) {
+        case .qwen3:
+            qwenModel = try await Qwen3ASRModel.fromPretrained(
+                modelId: modelId,
+                progressHandler: progressHandler
+            )
+        case .whisper:
+            whisperModel = try await WhisperModel.fromPretrained(
+                modelId: modelId,
+                progressHandler: progressHandler
+            )
+        }
     }
 
     /// Whether the model is loaded and ready
     var isReady: Bool {
-        model != nil
+        qwenModel != nil || whisperModel != nil
     }
 
     /// Transcribe audio samples to text (output is always Traditional Chinese)
@@ -44,14 +66,21 @@ actor TranscriptionEngine {
         samples: [Float],
         sampleRate: Int = 16_000
     ) throws -> String {
-        guard let model else {
+        let text: String
+
+        if let qwenModel {
+            text = qwenModel.transcribe(
+                audio: samples,
+                sampleRate: sampleRate
+            )
+        } else if let whisperModel {
+            text = whisperModel.transcribe(
+                audio: samples,
+                sampleRate: sampleRate
+            )
+        } else {
             throw EngineError.modelNotLoaded
         }
-
-        let text = model.transcribe(
-            audio: samples,
-            sampleRate: sampleRate
-        )
 
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
