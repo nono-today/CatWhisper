@@ -14,6 +14,7 @@ Fully offline. Your voice never leaves your Mac.
 [![Platform](https://img.shields.io/badge/Platform-macOS%2014+-black.svg)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-Required-green.svg)](#requirements)
+[![Download](https://img.shields.io/github/v/release/koobraelc/CatWhisper?label=Download&color=purple)](https://github.com/koobraelc/CatWhisper/releases/latest)
 
 [English](#features) | [繁體中文](#功能特色)
 
