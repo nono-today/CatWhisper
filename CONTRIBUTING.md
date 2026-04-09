@@ -4,7 +4,7 @@
 
 ## 回報問題
 
-- 使用 [Issue](https://github.com/koobraelc/CatWhisper/issues) 回報 bug 或提出功能建議
+- 使用 [Issue](https://github.com/nono-today/CatWhisper/issues) 回報 bug 或提出功能建議
 - 請附上 macOS 版本、晶片型號 (M1/M2/...)，以及重現步驟
 
 ## 開發流程

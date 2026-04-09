@@ -14,7 +14,7 @@ Fully offline. Your voice never leaves your Mac.
 [![Platform](https://img.shields.io/badge/Platform-macOS%2014+-black.svg)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-Required-green.svg)](#requirements)
-[![Download](https://img.shields.io/github/v/release/koobraelc/CatWhisper?label=Download&color=purple)](https://github.com/koobraelc/CatWhisper/releases/latest)
+[![Download](https://img.shields.io/github/v/release/nono-today/CatWhisper?label=Download&color=purple)](https://github.com/nono-today/CatWhisper/releases/latest)
 
 [English](#features) | [繁體中文](#功能特色)
 
@@ -68,14 +68,14 @@ The pixel cat icon changes based on app state — idle (no headphones), recordin
 
 ### Download
 
-Grab the latest `.zip` from **[Releases](https://github.com/koobraelc/CatWhisper/releases)**, unzip, and drag to Applications.
+Grab the latest `.zip` from **[Releases](https://github.com/nono-today/CatWhisper/releases)**, unzip, and drag to Applications.
 
 > **Note:** On first launch, right-click CatWhisper → Open to bypass Gatekeeper.
 
 ### Build from source
 
 ```bash
-git clone https://github.com/koobraelc/CatWhisper.git
+git clone https://github.com/nono-today/CatWhisper.git
 cd CatWhisper/CatWhisper
 
 # Option A: Swift CLI
@@ -267,14 +267,14 @@ Menu bar 上的像素貓圖標會隨著 App 狀態改變 — 待命時無耳機�
 
 ### 下載安裝
 
-前往 **[Releases](https://github.com/koobraelc/CatWhisper/releases)** 下載最新的 `.zip`，解壓後拖曳到應用程式資料夾。
+前往 **[Releases](https://github.com/nono-today/CatWhisper/releases)** 下載最新的 `.zip`，解壓後拖曳到應用程式資料夾。
 
 > **注意：** 首次開啟時，若出現「無法驗證開發者」提示，請右鍵點擊 CatWhisper → 打開。
 
 ### 從原始碼建置
 
 ```bash
-git clone https://github.com/koobraelc/CatWhisper.git
+git clone https://github.com/nono-today/CatWhisper.git
 cd CatWhisper/CatWhisper
 
 # 方法一：Swift CLI
