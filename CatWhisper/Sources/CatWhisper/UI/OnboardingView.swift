@@ -154,7 +154,7 @@ struct OnboardingView: View {
             } else {
                 VStack(spacing: 10) {
                     actionButton("開啟系統設定") {
-                        AccessibilityChecker.checkAndPrompt()
+                        AccessibilityChecker.openAccessibilitySettings()
                         currentStep = 2
                     }
                     Text("若不授權，可改為手動複製貼上")

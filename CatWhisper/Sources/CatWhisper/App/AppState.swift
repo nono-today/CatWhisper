@@ -167,13 +167,12 @@ final class AppState: ObservableObject {
                 // Show result in notch overlay
                 notchOverlay.showResult(text)
 
-                // Inject text directly into focused window
-                if AccessibilityChecker.isTrusted {
+                // Inject text directly into focused window, or fallback to clipboard
+                if PermissionManager.shared.accessibilityAuthorized {
                     textInjector.injectText(text)
                 } else {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
-                    AccessibilityChecker.checkAndPrompt()
                 }
 
                 state = .idle

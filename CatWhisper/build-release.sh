@@ -18,7 +18,7 @@ set -euo pipefail
 # ─── Configuration ────────────────────────────────────────────────────
 APP_NAME="CatWhisper"
 BUNDLE_ID="com.cat.whisper"
-DEVELOPER_ID="Developer ID Application: YOUR NAME (TEAM_ID)"  # ← Update this
+DEVELOPER_ID="Developer ID Application: Frank Lin (766AZHGT3J)"
 NOTARY_PROFILE="catwhisper-notary"                              # ← Must match store-credentials name
 # ──────────────────────────────────────────────────────────────────────
 

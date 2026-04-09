@@ -47,8 +47,8 @@ Recording and transcription status appears as a capsule near the notch with smoo
 </td>
 <td width="50%" valign="top">
 
-### Nyan Cat menu bar
-The Nyan Cat icon changes expression based on app state — normal eyes (idle), headphones (recording), squinting (transcribing), X eyes (error).
+### Pixel cat menu bar
+The pixel cat icon changes based on app state — idle (no headphones), recording (wearing headphones).
 
 </td>
 </tr>
@@ -89,7 +89,7 @@ open CatWhisper.xcodeproj
 ## Usage
 
 ```
-1. Launch CatWhisper → appears in the menu bar (Nyan Cat icon)
+1. Launch CatWhisper → appears in the menu bar (pixel cat icon)
 2. First launch → onboarding grants Microphone & Accessibility permissions
 3. Wait for model download → ~1-2 min on first run
 4. Hold fn in any app → start speaking
@@ -144,7 +144,7 @@ CatWhisper/
     ├── NotchOverlay.swift         # Dynamic Island capsule (NSPanel)
     ├── OnboardingView.swift       # First-launch wizard
     ├── SettingsView.swift         # Settings window
-    └── StatusItemIcon.swift       # Nyan Cat pixel art
+    └── StatusItemIcon.swift       # Pixel cat menu bar icon
 ```
 
 **Built with:**
@@ -159,7 +159,7 @@ CatWhisper/
 <details>
 <summary><b>fn key doesn't do anything?</b></summary>
 
-1. Check the Nyan Cat icon is in the menu bar and shows "Idle"
+1. Check the pixel cat icon is in the menu bar and shows "Idle"
 2. Make sure the model has finished downloading (not showing "Loading model XX%")
 3. System Settings → Keyboard → check fn key behavior
 
@@ -207,7 +207,6 @@ Bug reports, feature requests, and PRs are all appreciated.
 - [Qwen3-ASR](https://github.com/ivan-digital/qwen3-asr-swift) — Speech recognition models
 - [MLX Swift](https://github.com/ml-explore/mlx-swift) — Apple ML framework
 - [OpenAI Whisper](https://github.com/openai/whisper) — Speech recognition model architecture
-- [Nyan Cat](https://www.nyan.cat/) — Inspired our menu bar icon
 
 ## License
 
@@ -247,8 +246,8 @@ Bug reports, feature requests, and PRs are all appreciated.
 </td>
 <td width="50%" valign="top">
 
-### Nyan Cat 選單列
-Menu bar 上的 Nyan Cat 圖標會隨著 App 狀態改變表情 — 待命時正常眼、錄音時戴耳機、辨識時瞇眼、出錯時 X 眼。
+### 像素貓選單列
+Menu bar 上的像素貓圖標會隨著 App 狀態改變 — 待命時無耳機、錄音時戴上耳機。
 
 </td>
 </tr>
@@ -289,7 +288,7 @@ open CatWhisper.xcodeproj
 ## 使用方式
 
 ```
-1. 啟動 CatWhisper → 出現在選單列（Nyan Cat 圖標）
+1. 啟動 CatWhisper → 出現在選單列（像素貓圖標）
 2. 首次啟動 → 引導授權麥克風和輔助使用權限
 3. 等待模型下載 → 首次約 1-2 分鐘
 4. 在任何 App 中按住 fn → 開始說話
@@ -320,7 +319,7 @@ open CatWhisper.xcodeproj
 <details>
 <summary><b>按 fn 沒有反應？</b></summary>
 
-1. 確認選單列有看到 Nyan Cat 圖標，且狀態為「待命中」
+1. 確認選單列有看到像素貓圖標，且狀態為「待命中」
 2. 確認模型已下載完成（不是顯示「載入模型中 XX%」）
 3. 檢查系統設定 → 鍵盤 → 確認 fn 鍵行為設定
 
