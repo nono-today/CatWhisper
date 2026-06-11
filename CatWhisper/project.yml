@@ -2,17 +2,17 @@ name: CatWhisper
 options:
   bundleIdPrefix: com.cat
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "15.0"
   xcodeVersion: "16.0"
   generateEmptyDirectories: true
 
 packages:
   qwen3-asr-swift:
     url: https://github.com/ivan-digital/qwen3-asr-swift
-    revision: ba91e9e23af90afdf4323e85c0583d82a5acaabc
+    revision: f6e539a5e37ef017dbe23c5a58053753a56e2ba4
   mlx-swift:
     url: https://github.com/ml-explore/mlx-swift
-    from: "0.30.0"
+    from: "0.31.4"
 
 targets:
   CatWhisper:
@@ -31,7 +31,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: CatWhisper.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "5.9"
-        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
         DEVELOPMENT_TEAM: 766AZHGT3J
         LD_RUNPATH_SEARCH_PATHS:
           - "@executable_path/../Frameworks"
@@ -46,7 +46,9 @@ targets:
       - package: qwen3-asr-swift
         product: Qwen3ASR
       - package: qwen3-asr-swift
-        product: Qwen3Common
+        product: AudioCommon
+      - package: qwen3-asr-swift
+        product: NemotronStreamingASR
       - package: mlx-swift
         product: MLX
       - package: mlx-swift

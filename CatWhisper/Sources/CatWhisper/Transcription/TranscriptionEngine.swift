@@ -1,6 +1,6 @@
 import Foundation
 import Qwen3ASR
-import Qwen3Common
+import AudioCommon
 
 /// Actor wrapping Qwen3ASRModel for thread-safe model loading and transcription
 /// Always outputs Traditional Chinese (簡體→繁體 conversion applied)
@@ -87,14 +87,6 @@ actor TranscriptionEngine {
             return ""  // No speech detected — let caller handle silently
         }
 
-        return toTraditionalChinese(trimmed)
-    }
-
-    /// Convert Simplified Chinese → Traditional Chinese
-    /// Non-Chinese text passes through unchanged
-    private func toTraditionalChinese(_ text: String) -> String {
-        let mutable = NSMutableString(string: text)
-        CFStringTransform(mutable, nil, "Simplified-Traditional" as CFString, false)
-        return mutable as String
+        return ChineseConverter.toTraditional(trimmed)
     }
 }

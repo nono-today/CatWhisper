@@ -2,7 +2,8 @@ import Foundation
 import MLX
 import MLXNN
 import MLXFast
-import Qwen3Common
+import AudioCommon
+import MLXCommon
 import Qwen3ASR
 
 // MARK: - WhisperModel
@@ -83,9 +84,11 @@ class WhisperModel {
             if step == 0 {
                 // First iteration: pass full prompt
                 inputTokens = tokens
-            } else {
+            } else if let lastToken = tokens.last {
                 // Subsequent iterations: pass only the last token (use caches)
-                inputTokens = [tokens.last!]
+                inputTokens = [lastToken]
+            } else {
+                break
             }
 
             let tokenIds = MLXArray(inputTokens).expandedDimensions(axis: 0)
