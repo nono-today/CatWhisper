@@ -17,6 +17,10 @@ final class PermissionManager: ObservableObject {
         startPolling()
     }
 
+    deinit {
+        pollTimer?.invalidate()
+    }
+
     func checkPermissions() {
         microphoneAuthorized = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
         accessibilityAuthorized = AccessibilityChecker.isTrusted
@@ -29,7 +33,13 @@ final class PermissionManager: ObservableObject {
     }
 
     func requestAccessibilityAccess() {
-        AccessibilityChecker.openAccessibilitySettings()
+        // Trigger the system prompt first — TCC entries are bound to the app's
+        // code signature, so this registers the *current* build in the
+        // Accessibility list. A stale entry from an old build looks enabled
+        // in System Settings but AXIsProcessTrusted() still returns false.
+        if !AccessibilityChecker.checkAndPrompt() {
+            AccessibilityChecker.openAccessibilitySettings()
+        }
     }
 
     /// Poll accessibility status — macOS provides no notification for this change,

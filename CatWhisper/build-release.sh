@@ -41,41 +41,23 @@ xcodebuild build \
   -skipPackagePluginValidation \
   -quiet
 
-# Locate binary in DerivedData
+# Locate built app bundle in DerivedData
 DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData"
-RELEASE_DIR=$(find "$DERIVED_DATA"/${APP_NAME}-*/Build/Products/Release/ \
-  -maxdepth 0 -type d 2>/dev/null | head -1)
+RELEASE_APP=$(find "$DERIVED_DATA"/${APP_NAME}-*/Build/Products/Release \
+  -maxdepth 1 -name "$APP_NAME.app" -type d 2>/dev/null | head -1)
 
-if [ -z "$RELEASE_DIR" ] || [ ! -f "$RELEASE_DIR/$APP_NAME" ]; then
-  echo "✗ Release binary not found in DerivedData"
+if [ -z "$RELEASE_APP" ]; then
+  echo "✗ $APP_NAME.app not found in DerivedData"
   exit 1
 fi
 
-echo "  Binary: $RELEASE_DIR/$APP_NAME"
+echo "  App: $RELEASE_APP"
 
-# ─── Step 2: Assemble .app Bundle ─────────────────────────────────────
-echo "▸ Assembling $APP_NAME.app..."
-mkdir -p "$APP_BUNDLE/Contents/MacOS"
-mkdir -p "$APP_BUNDLE/Contents/Resources"
-
-# Copy binary
-cp "$RELEASE_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
-
-# Copy Info.plist
-cp "$SCRIPT_DIR/Resources/Info.plist" "$APP_BUNDLE/Contents/"
-
-# Copy icon
-cp "$SCRIPT_DIR/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/"
-
-# Copy MLX bundle if present
-if [ -d "$RELEASE_DIR/mlx-swift_Cmlx.bundle" ]; then
-  cp -R "$RELEASE_DIR/mlx-swift_Cmlx.bundle" "$APP_BUNDLE/Contents/Resources/"
-fi
-
-# Copy KeyboardShortcuts bundle if present
-for bundle in "$RELEASE_DIR"/*.bundle; do
-  [ -d "$bundle" ] && cp -R "$bundle" "$APP_BUNDLE/Contents/Resources/"
-done
+# ─── Step 2: Copy .app Bundle ─────────────────────────────────────────
+# The built bundle already contains the binary, Info.plist, Assets.car,
+# AppIcon, and companion bundles (MLX, etc.) — re-sign it below.
+echo "▸ Copying $APP_NAME.app..."
+cp -R "$RELEASE_APP" "$APP_BUNDLE"
 
 # ─── Step 3: Code Sign ────────────────────────────────────────────────
 echo "▸ Code signing..."

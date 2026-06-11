@@ -5,6 +5,8 @@ set -e
 SCHEME="CatWhisper"
 CONFIGURATION="${1:-Release}"
 DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEV_APP="$SCRIPT_DIR/dist/$SCHEME.app"
 
 echo "Building $SCHEME ($CONFIGURATION)..."
 xcodebuild build \
@@ -14,16 +16,25 @@ xcodebuild build \
   -skipPackagePluginValidation \
   -quiet
 
-# Find built binary in DerivedData
-BINARY=$(find "$DERIVED_DATA"/CatWhisper-*/Build/Products/"$CONFIGURATION"/ \
-  -maxdepth 1 -name "$SCHEME" -type f 2>/dev/null | head -1)
+# Find built app bundle in DerivedData
+BUILT_APP=$(find "$DERIVED_DATA"/CatWhisper-*/Build/Products/"$CONFIGURATION" \
+  -maxdepth 1 -name "$SCHEME.app" -type d 2>/dev/null | head -1)
 
-if [ -z "$BINARY" ] || [ ! -f "$BINARY" ]; then
-  echo "Error: Binary not found in DerivedData"
+if [ -z "$BUILT_APP" ]; then
+  echo "Error: $SCHEME.app not found in DerivedData"
   exit 1
 fi
 
-BUILD_DIR=$(dirname "$BINARY")
-echo "Launching $SCHEME from $BUILD_DIR..."
-DYLD_FRAMEWORK_PATH="$BUILD_DIR/PackageFrameworks:$BUILD_DIR" \
-  exec "$BINARY" "$@"
+echo "  App: $BUILT_APP"
+
+# Kill any running instance so we can replace the bundle
+pkill -x "$SCHEME" 2>/dev/null || true
+sleep 0.5
+
+# Copy the complete built bundle (binary, Info.plist, Assets.car, companion bundles)
+rm -rf "$DEV_APP"
+mkdir -p "$(dirname "$DEV_APP")"
+cp -R "$BUILT_APP" "$DEV_APP"
+
+echo "Launching $SCHEME..."
+open -n "$DEV_APP"
