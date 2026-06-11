@@ -1,5 +1,8 @@
 import SwiftUI
 import ServiceManagement
+import os
+
+private let logger = Logger(subsystem: "com.cat.whisper", category: "Settings")
 
 /// Settings window for CatWhisper
 struct SettingsView: View {
@@ -25,7 +28,7 @@ struct SettingsView: View {
                     Label("關於", systemImage: "info.circle")
                 }
         }
-        .frame(width: 450, height: 350)
+        .frame(width: 450, height: 400)
     }
 
     // MARK: - Tabs
@@ -75,6 +78,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .scrollDisabled(true)
         .padding()
     }
 
@@ -97,6 +101,10 @@ struct SettingsView: View {
                     Section("Whisper — large-v3-turbo（99 語言）") {
                         Text("large-v3-turbo（~1.6GB）")
                             .tag("mlx-community/whisper-large-v3-turbo")
+                    }
+                    Section("即時聽寫 — Nemotron 0.6B（25 語言）") {
+                        Text("0.6B INT8 串流（~600MB，邊講邊出字）")
+                            .tag(NemotronStreamingEngine.modelId)
                     }
                 }
                 .onChange(of: selectedModelId) { _, _ in
@@ -121,14 +129,16 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .scrollDisabled(true)
         .padding()
     }
 
     private var aboutTab: some View {
         VStack(spacing: 12) {
-            Image(systemName: "mic.badge.xmark")
-                .font(.system(size: 48))
-                .foregroundStyle(.tint)
+            Image("AppLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
 
             Text("CatWhisper")
                 .font(.title)
@@ -137,7 +147,7 @@ struct SettingsView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            Text("v1.0.0")
+            Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—")")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -159,7 +169,9 @@ struct SettingsView: View {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            // Silently fail — not critical
+            logger.error("登入時自動啟動設定失敗: \(error.localizedDescription)")
+            // Sync the toggle back to the actual system state
+            launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
 }

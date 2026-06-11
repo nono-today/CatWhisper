@@ -16,6 +16,11 @@ final class AudioRecorder {
 
     private static let targetSampleRate: Double = 16_000
 
+    /// Optional live tap: receives each converted 16kHz chunk as it arrives,
+    /// on the audio thread. Used by the streaming dictation path; nil for
+    /// batch recording. Samples still accumulate in the buffer either way.
+    var onSamples: (([Float]) -> Void)?
+
     enum RecorderError: LocalizedError {
         case alreadyRecording
         case engineStartFailed(Error)
@@ -136,6 +141,7 @@ final class AudioRecorder {
                     count: Int(outputBuffer.frameLength)
                 ))
                 self.buffer.append(samples)
+                self.onSamples?(samples)
             }
         }
 
