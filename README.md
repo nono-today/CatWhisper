@@ -70,7 +70,7 @@ The pixel cat icon changes based on app state — idle (no headphones), recordin
 
 Grab the latest `.dmg` from **[Releases](https://github.com/nono-today/CatWhisper/releases)** and drag CatWhisper to Applications.
 
-> **Note:** On first launch, right-click CatWhisper → Open to bypass Gatekeeper.
+> **Note:** If macOS blocks the first launch, go to System Settings → Privacy & Security and click "Open Anyway".
 
 ### Build from source
 
@@ -102,7 +102,7 @@ open CatWhisper.xcodeproj
 | Permission | Purpose | Required? |
 |------|------|--------|
 | Microphone | Record audio for transcription | Yes |
-| Accessibility | Type text into other apps automatically | Optional (falls back to clipboard) |
+| Accessibility | Type text into other apps automatically | Optional (falls back to clipboard); required for live dictation |
 
 ## Models
 
@@ -128,14 +128,18 @@ CatWhisper/
 │   ├── AudioRecorder.swift        # AVAudioEngine recording
 │   └── AudioBuffer.swift          # Thread-safe sample buffer
 ├── Transcription/
-│   └── TranscriptionEngine.swift  # Dual-engine: Qwen3-ASR + Whisper
+│   ├── TranscriptionEngine.swift  # Batch engines: Qwen3-ASR + Whisper
+│   ├── NemotronStreamingEngine.swift  # Live streaming ASR (Nemotron)
+│   └── ChineseConverter.swift     # Simplified → Traditional conversion
 ├── Whisper/
 │   ├── WhisperConfig.swift        # Model config from JSON
 │   ├── WhisperEncoder.swift       # Conv1d + transformer audio encoder
 │   ├── WhisperDecoder.swift       # Cross-attention text decoder
 │   └── WhisperModel.swift         # Weight loading + greedy decoding
 ├── Input/
-│   ├── TextInjector.swift         # Accessibility API text injection
+│   ├── TextInjector.swift         # Clipboard + Cmd+V batch injection
+│   ├── LiveTextInjector.swift     # Live typing via CGEvent unicode events
+│   ├── TextDelta.swift            # Minimal edit between streaming hypotheses
 │   └── AccessibilityChecker.swift
 ├── Hotkey/
 │   └── FnKeyMonitor.swift         # Global fn key monitoring
@@ -186,7 +190,7 @@ Switch to the 1.7B model or Whisper large-v3-turbo in Settings. Larger models ar
 <details>
 <summary><b>What languages are supported?</b></summary>
 
-Qwen3-ASR 0.6B supports 30 languages, the 1.7B variant supports 52, and Whisper large-v3-turbo supports 99. Output is converted to Traditional Chinese by default.
+Qwen3-ASR 0.6B supports 30 languages, the 1.7B variant supports 52, Whisper large-v3-turbo supports 99, and the Nemotron streaming model supports 25. Output is converted to Traditional Chinese by default.
 
 </details>
 
@@ -270,7 +274,7 @@ Menu bar 上的像素貓圖標會隨著 App 狀態改變 — 待命時無耳機�
 
 前往 **[Releases](https://github.com/nono-today/CatWhisper/releases)** 下載最新的 `.dmg`，將 CatWhisper 拖曳到應用程式資料夾。
 
-> **注意：** 首次開啟時，若出現「無法驗證開發者」提示，請右鍵點擊 CatWhisper → 打開。
+> **注意：** 首次開啟若被 macOS 阻擋，請到「系統設定 → 隱私權與安全性」按「強制打開」。
 
 ### 從原始碼建置
 
@@ -302,7 +306,7 @@ open CatWhisper.xcodeproj
 | 權限 | 用途 | 必要性 |
 |------|------|--------|
 | 麥克風 | 錄製語音進行辨識 | 必要 |
-| 輔助使用 | 自動將文字輸入到其他 App | 選用（未授權則複製到剪貼簿） |
+| 輔助使用 | 自動將文字輸入到其他 App | 選用（未授權則複製到剪貼簿）；即時聽寫必要 |
 
 ## 模型
 
@@ -347,7 +351,7 @@ open CatWhisper.xcodeproj
 <details>
 <summary><b>支援哪些語言？</b></summary>
 
-Qwen3-ASR 0.6B 支援 30 種語言、1.7B 支援 52 種、Whisper large-v3-turbo 支援 99 種。輸出預設轉換為繁體中文。
+Qwen3-ASR 0.6B 支援 30 種語言、1.7B 支援 52 種、Whisper large-v3-turbo 支援 99 種、Nemotron 串流模型支援 25 種。輸出預設轉換為繁體中文。
 
 </details>
 
